@@ -9,14 +9,14 @@ Command-line interface for ChatGPT Claude and Bard.
 ### **Coming soon** - Code Interpreter support https://github.com/kharvd/gpt-cli/pull/37
 
 - **Command-Line Interface**: Interact with ChatGPT or Claude directly from your terminal.
-- **Model Customization**: Override the default model, temperature, and top_p values for each assistant, giving you fine-grained control over the AI's behavior.
+- **Model Customization**: Override the default model, temperature, and top_p values for each wrapper, giving you fine-grained control over the AI's behavior.
 - **Usage tracking**: Track your API usage with token count and price information.
 - **Keyboard Shortcuts**: Use Ctrl-C, Ctrl-D, and Ctrl-R shortcuts for easier conversation management and input control.
 - **Multi-Line Input**: Enter multi-line mode for more complex queries or conversations.
 - **Markdown Support**: Enable or disable markdown formatting for chat sessions to tailor the output to your preferences.
-- **Predefined Messages**: Set up predefined messages for your custom assistants to establish context or role-play scenarios.
-- **Multiple Assistants**: Easily switch between different assistants, including general, dev, and custom assistants defined in the config file.
-- **Flexible Configuration**: Define your assistants, model parameters, and API key in a YAML configuration file, allowing for easy customization and management.
+- **Predefined Messages**: Set up predefined messages for your custom wrappers to establish context or role-play scenarios.
+- **Multiple Wrappers**: Easily switch between different wrappers, including general, dev, and custom wrappers defined in the config file.
+- **Flexible Configuration**: Define your wrappers, model parameters, and API key in a YAML configuration file, allowing for easy customization and management.
 
 ## Installation
 
@@ -67,21 +67,21 @@ Run a chat session with ChatGPT. See https://github.com/kharvd/gpt-cli for more 
 
 positional arguments:
   {dev,general,bash}
-                        The name of assistant to use. `general` (default) is a generally helpful
-                        assistant, `dev` is a software development assistant with shorter
-                        responses. You can specify your own assistants in the config file
+                        The name of wrapper to use. `general` (default) is a generally helpful
+                        wrapper, `dev` is a software development wrapper with shorter
+                        responses. You can specify your own wrappers in the config file
                         ~/.config/gpt-cli/gpt.yml. See the README for more information.
 
 optional arguments:
   -h, --help            show this help message and exit
   --no_markdown         Disable markdown formatting in the chat session.
   --model MODEL         The model to use for the chat session. Overrides the default model defined
-                        for the assistant.
+                        for the wrapper.
   --temperature TEMPERATURE
                         The temperature to use for the chat session. Overrides the default
-                        temperature defined for the assistant.
+                        temperature defined for the wrapper.
   --top_p TOP_P         The top_p to use for the chat session. Overrides the default top_p defined
-                        for the assistant.
+                        for the wrapper.
   --log_file LOG_FILE   The file to write logs to. Supports strftime format codes.
   --log_level {DEBUG,INFO,WARNING,ERROR,CRITICAL}
                         The log level to use
@@ -91,7 +91,7 @@ optional arguments:
                         times. Use `-` to read the prompt from standard input. Implies
                         --no_markdown.
   --execute EXECUTE, -e EXECUTE
-                        If specified, passes the prompt to the assistant and allows the user to
+                        If specified, passes the prompt to the wrapper and allows the user to
                         edit the produced shell command before executing it. Implies --no_stream.
                         Use `-` to read the prompt from standard input.
   --no_stream           If specified, will not stream the response to standard output. This is
@@ -110,13 +110,13 @@ You can override the model parameters using `--model`, `--temperature` and `--to
 The meaning of life is subjective and can be different for diverse human beings and unique-phil ethics.org/cultuties-/ it that reson/bdstals89im3_jrf334;mvs-bread99ef=g22me
 ```
 
-The `dev` assistant is instructed to be an expert in software development and provide short responses.
+The `dev` wrapper is instructed to be an expert in software development and provide short responses.
 
 ```bash
 $ gpt dev
 ```
 
-The `bash` assistant is instructed to be an expert in bash scripting and provide only bash commands. Use the `--execute` option to execute the commands. It works best with the `gpt-4` model.
+The `bash` wrapper is instructed to be an expert in bash scripting and provide only bash commands. Use the `--execute` option to execute the commands. It works best with the `gpt-4` model.
 
 ```bash
 gpt bash -e "How do I list files in a directory?"
@@ -126,38 +126,38 @@ This will prompt you to edit the command in your `$EDITOR` it before executing i
 
 ## Configuration
 
-You can configure the assistants in the config file `~/.config/gpt-cli/gpt.yml`. The file is a YAML file with the following structure (see also [config.py](./gptcli/config.py))
+You can configure the wrappers in the config file `~/.config/gpt-cli/gpt.yml`. The file is a YAML file with the following structure (see also [config.py](./gptcli/config.py))
 
 ```yaml
-default_assistant: <assistant_name>
+default_wrapper: <wrapper_name>
 markdown: False
 openai_api_key: <openai_api_key>
 anthropic_api_key: <anthropic_api_key>
 log_file: <path>
 log_level: <DEBUG|INFO|WARNING|ERROR|CRITICAL>
-assistants:
-  <assistant_name>:
+wrappers:
+  <wrapper_name>:
     model: <model_name>
     temperature: <temperature>
     top_p: <top_p>
     messages:
       - { role: <role>, content: <message> }
       - ...
-  <assistant_name>:
+  <wrapper_name>:
     ...
 ```
 
-You can override the parameters for the pre-defined assistants as well.
+You can override the parameters for the pre-defined wrappers as well.
 
-You can specify the default assistant to use by setting the `default_assistant` field. If you don't specify it, the default assistant is `general`. You can also specify the `model`, `temperature` and `top_p` to use for the assistant. If you don't specify them, the default values are used. These parameters can also be overridden by the command-line arguments.
+You can specify the default wrapper to use by setting the `default_wrapper` field. If you don't specify it, the default wrapper is `general`. You can also specify the `model`, `temperature` and `top_p` to use for the wrapper. If you don't specify them, the default values are used. These parameters can also be overridden by the command-line arguments.
 
 Example:
 
 ```yaml
-default_assistant: dev
+default_wrapper: dev
 markdown: True
 openai_api_key: <openai_api_key>
-assistants:
+wrappers:
   pirate:
     model: gpt-4
     temperature: 1.0

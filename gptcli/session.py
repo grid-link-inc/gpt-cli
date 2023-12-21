@@ -1,6 +1,6 @@
 from abc import abstractmethod
 from typing_extensions import TypeGuard
-from gptcli.assistant import Assistant
+from gptcli.wrapper import Wrapper
 from gptcli.completion import Message, ModelOverrides
 from openai import BadRequestError, OpenAIError
 from typing import Any, Dict, List, Tuple
@@ -70,16 +70,16 @@ Commands:
 class ChatSession:
     def __init__(
         self,
-        assistant: Assistant,
+        wrapper: Wrapper,
         listener: ChatListener,
     ):
-        self.assistant = assistant
-        self.messages: List[Message] = assistant.init_messages()
+        self.wrapper = wrapper
+        self.messages: List[Message] = wrapper.init_messages()
         self.user_prompts: List[Tuple[Message, ModelOverrides]] = []
         self.listener = listener
 
     def _clear(self):
-        self.messages = self.assistant.init_messages()
+        self.messages = self.wrapper.init_messages()
         self.user_prompts = []
         self.listener.on_chat_clear()
 
@@ -101,7 +101,7 @@ class ChatSession:
         """
         next_response: str = ""
         try:
-            completion_iter = self.assistant.complete_chat(
+            completion_iter = self.wrapper.complete_chat(
                 self.messages, override_params=args
             )
 
@@ -128,7 +128,7 @@ class ChatSession:
 
     def _validate_args(self, args: Dict[str, Any]) -> TypeGuard[ModelOverrides]:
         for key in args:
-            supported_overrides = self.assistant.supported_overrides()
+            supported_overrides = self.wrapper.supported_overrides()
             if key not in supported_overrides:
                 self.listener.on_error(
                     InvalidArgumentError(

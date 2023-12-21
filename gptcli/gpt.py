@@ -15,11 +15,11 @@ import logging
 import datetime
 import google.generativeai as genai
 import gptcli.anthropic
-from gptcli.assistant import (
-    Assistant,
-    DEFAULT_ASSISTANTS,
-    AssistantGlobalArgs,
-    init_assistant,
+from gptcli.wrapper import (
+    Wrapper,
+    DEFAULT_WRAPPER,
+    WrapperGlobalArgs,
+    init_wrapper,
 )
 from gptcli.cli import (
     CLIChatListener,
@@ -58,12 +58,12 @@ def parse_args(config: GptCliConfig):
         description="Run a chat session with ChatGPT. See https://github.com/kharvd/gpt-cli for more information."
     )
     parser.add_argument(
-        "assistant_name",
+        "wrapper_name",
         type=str,
-        default=config.default_assistant,
+        default=config.default_wrapper,
         nargs="?",
-        choices=list(set([*DEFAULT_ASSISTANTS.keys(), *config.assistants.keys()])),
-        help="The name of assistant to use. `general` (default) is a generally helpful assistant, `dev` is a software development assistant with shorter responses. You can specify your own assistants in the config file ~/.config/gpt-cli/gpt.yml. See the README for more information.",
+        choices=list(set([*DEFAULT_WRAPPER.keys(), *config.wrappers.keys()])),
+        help="The name of wrapper to use. `general` (default) is a generally helpful wrapper, `dev` is a software development wrapper with shorter responses. You can specify your own wrappers in the config file ~/.config/gpt-cli/gpt.yml. See the README for more information.",
     )
     parser.add_argument(
         "--no_markdown",
@@ -76,19 +76,19 @@ def parse_args(config: GptCliConfig):
         "--model",
         type=str,
         default=None,
-        help="The model to use for the chat session. Overrides the default model defined for the assistant.",
+        help="The model to use for the chat session. Overrides the default model defined for the wrapper.",
     )
     parser.add_argument(
         "--temperature",
         type=float,
         default=None,
-        help="The temperature to use for the chat session. Overrides the default temperature defined for the assistant.",
+        help="The temperature to use for the chat session. Overrides the default temperature defined for the wrapper.",
     )
     parser.add_argument(
         "--top_p",
         type=float,
         default=None,
-        help="The top_p to use for the chat session. Overrides the default top_p defined for the assistant.",
+        help="The top_p to use for the chat session. Overrides the default top_p defined for the wrapper.",
     )
     parser.add_argument(
         "--log_file",
@@ -116,7 +116,7 @@ def parse_args(config: GptCliConfig):
         "-e",
         type=str,
         default=None,
-        help="If specified, passes the prompt to the assistant and allows the user to edit the produced shell command before executing it. Implies --no_stream. Use `-` to read the prompt from standard input.",
+        help="If specified, passes the prompt to the wrapper and allows the user to edit the produced shell command before executing it. Implies --no_stream. Use `-` to read the prompt from standard input.",
     )
     parser.add_argument(
         "--no_stream",
@@ -187,57 +187,57 @@ def main():
     if config.llama_models is not None:
         init_llama_models(config.llama_models)
 
-    assistant = init_assistant(cast(AssistantGlobalArgs, args), config.assistants)
+    wrapper = init_wrapper(cast(WrapperGlobalArgs, args), config.wrappers)
 
     if args.prompt is not None:
-        run_non_interactive(args, assistant)
+        run_non_interactive(args, wrapper)
     elif args.execute is not None:
-        run_execute(args, assistant)
+        run_execute(args, wrapper)
     else:
-        run_interactive(args, assistant)
+        run_interactive(args, wrapper)
 
 
-def run_execute(args, assistant):
+def run_execute(args, wrapper):
     logger.info(
-        "Starting a non-interactive execution session with prompt '%s'. Assistant config: %s",
+        "Starting a non-interactive execution session with prompt '%s'. Wrapper config: %s",
         args.prompt,
-        assistant.config,
+        wrapper.config,
     )
     if args.execute == "-":
         args.execute = "".join(sys.stdin.readlines())
-    execute(assistant, args.execute)
+    execute(wrapper, args.execute)
 
 
-def run_non_interactive(args, assistant):
+def run_non_interactive(args, wrapper):
     logger.info(
-        "Starting a non-interactive session with prompt '%s'. Assistant config: %s",
+        "Starting a non-interactive session with prompt '%s'. Wrapper config: %s",
         args.prompt,
-        assistant.config,
+        wrapper.config,
     )
     if "-" in args.prompt:
         args.prompt[args.prompt.index("-")] = "".join(sys.stdin.readlines())
 
-    simple_response(assistant, "\n".join(args.prompt), stream=not args.no_stream)
+    simple_response(wrapper, "\n".join(args.prompt), stream=not args.no_stream)
 
 
 class CLIChatSession(ChatSession):
-    def __init__(self, assistant: Assistant, markdown: bool, show_price: bool):
+    def __init__(self, wrapper: Wrapper, markdown: bool, show_price: bool):
         listeners = [
             CLIChatListener(markdown),
             LoggingChatListener(),
         ]
 
         if show_price:
-            listeners.append(PriceChatListener(assistant))
+            listeners.append(PriceChatListener(wrapper))
 
         listener = CompositeChatListener(listeners)
-        super().__init__(assistant, listener)
+        super().__init__(wrapper, listener)
 
 
-def run_interactive(args, assistant):
-    logger.info("Starting a new chat session. Assistant config: %s", assistant.config)
+def run_interactive(args, wrapper):
+    logger.info("Starting a new chat session. Wrapper config: %s", wrapper.config)
     session = CLIChatSession(
-        assistant=assistant, markdown=args.markdown, show_price=args.show_price
+        wrapper=wrapper, markdown=args.markdown, show_price=args.show_price
     )
     history_filename = os.path.expanduser("~/.config/gpt-cli/history")
     os.makedirs(os.path.dirname(history_filename), exist_ok=True)

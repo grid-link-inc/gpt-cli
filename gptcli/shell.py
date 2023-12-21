@@ -3,14 +3,14 @@ import logging
 import sys
 import subprocess
 import tempfile
-from gptcli.assistant import Assistant
+from gptcli.wrapper import Wrapper
 
 
-def simple_response(assistant: Assistant, prompt: str, stream: bool) -> None:
-    messages = assistant.init_messages()
+def simple_response(wrapper: Wrapper, prompt: str, stream: bool) -> None:
+    messages = wrapper.init_messages()
     messages.append({"role": "user", "content": prompt})
     logging.info("User: %s", prompt)
-    response_iter = assistant.complete_chat(messages, stream=stream)
+    response_iter = wrapper.complete_chat(messages, stream=stream)
     result = ""
     try:
         for response in response_iter:
@@ -20,16 +20,16 @@ def simple_response(assistant: Assistant, prompt: str, stream: bool) -> None:
         pass
     finally:
         sys.stdout.flush()
-        logging.info("Assistant: %s", result)
+        logging.info("Wrapper: %s", result)
 
 
-def execute(assistant: Assistant, prompt: str) -> None:
-    messages = assistant.init_messages()
+def execute(wrapper: Wrapper, prompt: str) -> None:
+    messages = wrapper.init_messages()
     messages.append({"role": "user", "content": prompt})
     logging.info("User: %s", prompt)
-    response_iter = assistant.complete_chat(messages, stream=False)
+    response_iter = wrapper.complete_chat(messages, stream=False)
     result = next(response_iter)
-    logging.info("Assistant: %s", result)
+    logging.info("Wrapper: %s", result)
 
     with tempfile.NamedTemporaryFile(mode="w", prefix="gptcli-", delete=False) as f:
         f.write("# Edit the command to execute below. Save and exit to execute it.\n")

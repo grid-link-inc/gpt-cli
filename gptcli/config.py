@@ -3,7 +3,7 @@ from typing import Dict, List, Optional, TypedDict
 from attr import dataclass
 import yaml
 
-from gptcli.assistant import AssistantConfig
+from gptcli.wrapper import WrapperConfig
 from gptcli.llama import LLaMAModelConfig
 
 
@@ -15,7 +15,7 @@ CONFIG_FILE_PATHS = [
 
 @dataclass
 class GptCliConfig:
-    default_assistant: str = "general"
+    default_wrapper: str = "general"
     markdown: bool = True
     show_price: bool = True
     api_key: Optional[str] = os.environ.get("OPENAI_API_KEY")
@@ -24,7 +24,7 @@ class GptCliConfig:
     google_api_key: Optional[str] = os.environ.get("GOOGLE_API_KEY")
     log_file: Optional[str] = None
     log_level: str = "INFO"
-    assistants: Dict[str, AssistantConfig] = {}
+    wrappers: Dict[str, WrapperConfig] = {}
     interactive: Optional[bool] = None
     llama_models: Optional[Dict[str, LLaMAModelConfig]] = None
 

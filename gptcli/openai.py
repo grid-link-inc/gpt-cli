@@ -56,7 +56,7 @@ def num_tokens_from_messages_openai(messages: List[Message], model: str) -> int:
             num_tokens += len(encoding.encode(value))
             if key == "name":  # if there's a name, the role is omitted
                 num_tokens += -1  # role is always required and always 1 token
-    num_tokens += 2  # every reply is primed with <im_start>assistant
+    num_tokens += 2  # every reply is primed with <im_start>wrapper
     return num_tokens
 
 

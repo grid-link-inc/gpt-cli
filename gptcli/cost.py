@@ -2,7 +2,7 @@ from gptcli.anthropic import (
     num_tokens_from_completion_anthropic,
     num_tokens_from_messages_anthropic,
 )
-from gptcli.assistant import Assistant
+from gptcli.wrapper import Wrapper
 from gptcli.completion import Message, ModelOverrides
 from gptcli.openai import (
     num_tokens_from_completion_openai,
@@ -136,8 +136,8 @@ def price_for_completion(messages: List[Message], response: Message, model: str)
 
 
 class PriceChatListener(ChatListener):
-    def __init__(self, assistant: Assistant):
-        self.assistant = assistant
+    def __init__(self, wrapper: Wrapper):
+        self.wrapper = wrapper
         self.current_spend = 0
         self.logger = logging.getLogger("gptcli-price")
         self.console = Console()
@@ -148,7 +148,7 @@ class PriceChatListener(ChatListener):
     def on_chat_response(
         self, messages: List[Message], response: Message, args: ModelOverrides
     ):
-        model = self.assistant._param("model", args)
+        model = self.wrapper._param("model", args)
         num_tokens = num_tokens_from_messages(messages + [response], model)
         price = price_for_completion(messages, response, model)
         if price is None:

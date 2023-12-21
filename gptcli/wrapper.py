@@ -11,7 +11,7 @@ from gptcli.openai import OpenAICompletionProvider
 from gptcli.anthropic import AnthropicCompletionProvider
 
 
-class AssistantConfig(TypedDict, total=False):
+class WrapperConfig(TypedDict, total=False):
     messages: List[Message]
     model: str
     temperature: float
@@ -24,7 +24,7 @@ CONFIG_DEFAULTS = {
     "top_p": 1.0,
 }
 
-DEFAULT_ASSISTANTS: Dict[str, AssistantConfig] = {
+DEFAULT_WRAPPER: Dict[str, WrapperConfig] = {
     "dev": {
         "messages": [
             {
@@ -68,17 +68,17 @@ def get_completion_provider(model: str) -> CompletionProvider:
         raise ValueError(f"Unknown model: {model}")
 
 
-class Assistant:
-    def __init__(self, config: AssistantConfig):
+class Wrapper:
+    def __init__(self, config: WrapperConfig):
         self.config = config
 
     @classmethod
-    def from_config(cls, name: str, config: AssistantConfig):
+    def from_config(cls, name: str, config: WrapperConfig):
         config = config.copy()
-        if name in DEFAULT_ASSISTANTS:
+        if name in DEFAULT_WRAPPER:
             # Merge the config with the default config
             # If a key is in both, use the value from the config
-            default_config = DEFAULT_ASSISTANTS[name]
+            default_config = DEFAULT_WRAPPER[name]
             for key in [*config.keys(), *default_config.keys()]:
                 if config.get(key) is None:
                     config[key] = default_config[key]
@@ -116,30 +116,30 @@ class Assistant:
 
 
 @dataclass
-class AssistantGlobalArgs:
-    assistant_name: str
+class WrapperGlobalArgs:
+    wrapper_name: str
     model: Optional[str] = None
     temperature: Optional[float] = None
     top_p: Optional[float] = None
 
 
-def init_assistant(
-    args: AssistantGlobalArgs, custom_assistants: Dict[str, AssistantConfig]
-) -> Assistant:
-    name = args.assistant_name
-    if name in custom_assistants:
-        assistant = Assistant.from_config(name, custom_assistants[name])
-    elif name in DEFAULT_ASSISTANTS:
-        assistant = Assistant.from_config(name, DEFAULT_ASSISTANTS[name])
+def init_wrapper(
+    args: WrapperGlobalArgs, custom_wrappers: Dict[str, WrapperConfig]
+) -> Wrapper:
+    name = args.wrapper_name
+    if name in custom_wrappers:
+        wrapper = Wrapper.from_config(name, custom_wrappers[name])
+    elif name in DEFAULT_WRAPPER:
+        wrapper = Wrapper.from_config(name, DEFAULT_WRAPPER[name])
     else:
-        print(f"Unknown assistant: {name}")
+        print(f"Unknown wrapper: {name}")
         sys.exit(1)
 
     # Override config with command line arguments
     if args.temperature is not None:
-        assistant.config["temperature"] = args.temperature
+        wrapper.config["temperature"] = args.temperature
     if args.model is not None:
-        assistant.config["model"] = args.model
+        wrapper.config["model"] = args.model
     if args.top_p is not None:
-        assistant.config["top_p"] = args.top_p
-    return assistant
+        wrapper.config["top_p"] = args.top_p
+    return wrapper
