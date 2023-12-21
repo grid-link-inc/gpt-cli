@@ -1,8 +1,8 @@
 from abc import abstractmethod
 from typing_extensions import TypeGuard
-from gptcli.wrapper import Wrapper
-from gptcli.completion import Message, ModelOverrides
-from openai import BadRequestError, OpenAIError
+from gptcli.gpt_interfaces.wrapper.wrapper import Wrapper
+from gptcli.gpt_interfaces.completion import Message, ModelOverrides
+from gptcli.gpt_interfaces.wrapper.interfaces.openai import BadRequestError, OpenAIError
 from typing import Any, Dict, List, Tuple
 
 
@@ -101,6 +101,8 @@ class ChatSession:
         """
         next_response: str = ""
         try:
+            # This needs to handle assistant calls
+            # self.wrapper needs to be 
             completion_iter = self.wrapper.complete_chat(
                 self.messages, override_params=args
             )

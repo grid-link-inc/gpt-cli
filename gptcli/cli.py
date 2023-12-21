@@ -1,7 +1,7 @@
 import re
 from prompt_toolkit import PromptSession
 from prompt_toolkit.history import FileHistory
-from openai import OpenAIError, BadRequestError
+from gptcli.gpt_interfaces.wrapper.interfaces.openai import OpenAIError, BadRequestError
 from prompt_toolkit.key_binding import KeyBindings, KeyPressEvent
 from prompt_toolkit.key_binding.bindings import named_commands
 from rich.console import Console

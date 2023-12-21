@@ -1,5 +1,5 @@
 import pytest
-from gptcli.wrapper import WrapperGlobalArgs, init_wrapper
+from gptcli.gpt_interfaces.wrapper.wrapper import WrapperGlobalArgs, init_wrapper
 
 
 @pytest.mark.parametrize(

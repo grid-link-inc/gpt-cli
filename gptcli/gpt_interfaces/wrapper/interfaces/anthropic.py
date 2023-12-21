@@ -1,8 +1,8 @@
 import os
 from typing import Iterator, List
-import anthropic
+import gptcli.gpt_interfaces.wrapper.interfaces.anthropic as anthropic
 
-from gptcli.completion import CompletionProvider, Message
+from gptcli.gpt_interfaces.completion import CompletionProvider, Message
 
 api_key = os.environ.get("ANTHROPIC_API_KEY")
 

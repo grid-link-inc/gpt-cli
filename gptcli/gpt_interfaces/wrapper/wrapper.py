@@ -4,12 +4,13 @@ from attr import dataclass
 import platform
 from typing import Any, Dict, Iterator, Optional, TypedDict, List
 
-from gptcli.completion import CompletionProvider, ModelOverrides, Message
-from gptcli.google import GoogleCompletionProvider
-from gptcli.llama import LLaMACompletionProvider
-from gptcli.openai import OpenAICompletionProvider
-from gptcli.anthropic import AnthropicCompletionProvider
+from gptcli.gpt_interfaces.completion import CompletionProvider, ModelOverrides, Message
+from gptcli.gpt_interfaces.wrapper.interfaces.google import GoogleCompletionProvider
+from gptcli.gpt_interfaces.wrapper.interfaces.llama import LLaMACompletionProvider
+from gptcli.gpt_interfaces.wrapper.interfaces.openai import OpenAICompletionProvider
+from gptcli.gpt_interfaces.wrapper.interfaces.anthropic import AnthropicCompletionProvider
 
+from gptcli.gpt_interfaces.gpt_interface import ChatInterface
 
 class WrapperConfig(TypedDict, total=False):
     messages: List[Message]
@@ -68,7 +69,7 @@ def get_completion_provider(model: str) -> CompletionProvider:
         raise ValueError(f"Unknown model: {model}")
 
 
-class Wrapper:
+class Wrapper(ChatInterface):
     def __init__(self, config: WrapperConfig):
         self.config = config
 

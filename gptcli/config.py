@@ -3,8 +3,9 @@ from typing import Dict, List, Optional, TypedDict
 from attr import dataclass
 import yaml
 
-from gptcli.wrapper import WrapperConfig
-from gptcli.llama import LLaMAModelConfig
+from gptcli.gpt_interfaces.wrapper.wrapper import WrapperConfig
+from gptcli.gpt_interfaces.chatgpt_assistant.assistant import AssistantConfig
+from gptcli.gpt_interfaces.wrapper.interfaces.llama import LLaMAModelConfig
 
 
 CONFIG_FILE_PATHS = [
@@ -27,6 +28,8 @@ class GptCliConfig:
     wrappers: Dict[str, WrapperConfig] = {}
     interactive: Optional[bool] = None
     llama_models: Optional[Dict[str, LLaMAModelConfig]] = None
+
+    assistants: Dict[str, AssistantConfig] = {}
 
 
 def choose_config_file(paths: List[str]) -> str:

@@ -1,10 +1,10 @@
-from gptcli.anthropic import (
+from gptcli.gpt_interfaces.wrapper.interfaces.anthropic import (
     num_tokens_from_completion_anthropic,
     num_tokens_from_messages_anthropic,
 )
-from gptcli.wrapper import Wrapper
-from gptcli.completion import Message, ModelOverrides
-from gptcli.openai import (
+from gptcli.gpt_interfaces.wrapper.wrapper import Wrapper
+from gptcli.gpt_interfaces.completion import Message, ModelOverrides
+from gptcli.gpt_interfaces.wrapper.interfaces.openai import (
     num_tokens_from_completion_openai,
     num_tokens_from_messages_openai,
 )

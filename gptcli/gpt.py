@@ -8,18 +8,24 @@ if sys.version_info < MIN_PYTHON:
 
 import os
 from typing import cast
-import openai
+import gptcli.gpt_interfaces.wrapper.interfaces.openai as openai
 import argparse
 import sys
 import logging
 import datetime
 import google.generativeai as genai
-import gptcli.anthropic
-from gptcli.wrapper import (
+import gptcli.gpt_interfaces.wrapper.interfaces.anthropic
+from gptcli.gpt_interfaces.wrapper.wrapper import (
     Wrapper,
     DEFAULT_WRAPPER,
     WrapperGlobalArgs,
     init_wrapper,
+)
+from gptcli.gpt_interfaces.chatgpt_assistant.assistant import (
+    Assistant,
+    DEFAULT_ASSISTANTS,
+    AssistantGlobalArgs,
+    init_assistant,
 )
 from gptcli.cli import (
     CLIChatListener,
@@ -32,7 +38,7 @@ from gptcli.config import (
     choose_config_file,
     read_yaml_config,
 )
-from gptcli.llama import init_llama_models
+from gptcli.gpt_interfaces.wrapper.interfaces.llama import init_llama_models
 from gptcli.logging import LoggingChatListener
 from gptcli.cost import PriceChatListener
 from gptcli.session import ChatSession
@@ -179,7 +185,7 @@ def main():
         sys.exit(1)
 
     if config.anthropic_api_key:
-        gptcli.anthropic.api_key = config.anthropic_api_key
+        gptcli.gpt_interfaces.wrapper.interfaces.anthropic.api_key = config.anthropic_api_key
 
     if config.google_api_key:
         genai.configure(api_key=config.google_api_key)
@@ -187,14 +193,17 @@ def main():
     if config.llama_models is not None:
         init_llama_models(config.llama_models)
 
-    wrapper = init_wrapper(cast(WrapperGlobalArgs, args), config.wrappers)
-
-    if args.prompt is not None:
-        run_non_interactive(args, wrapper)
-    elif args.execute is not None:
-        run_execute(args, wrapper)
+    if config.backend == "wrapper":
+        wrapper = init_wrapper(cast(WrapperGlobalArgs, args), config.wrappers)
+        if args.prompt is not None:
+            run_non_interactive(args, wrapper)
+        elif args.execute is not None:
+            run_execute(args, wrapper)
+        else:
+            run_interactive(args, wrapper)
     else:
-        run_interactive(args, wrapper)
+        assistant = init_assistant(cast(AssistantGlobalArgs, args), config.assistants)
+        run_assistant(args, assistant)
 
 
 def run_execute(args, wrapper):
@@ -244,6 +253,15 @@ def run_interactive(args, wrapper):
     input_provider = CLIUserInputProvider(history_filename=history_filename)
     session.loop(input_provider)
 
+def run_assistant(args, assistant):
+    logger.info("Starting a new chat session. Assistant config: %s", assistant.config)
+    session = CLIChatSession(
+        wrapper=assistant, markdown=args.markdown, show_price=args.show_price
+    )
+    history_filename = os.path.expanduser("~/.config/gpt-cli/history")
+    os.makedirs(os.path.dirname(history_filename), exist_ok=True)
+    input_provider = CLIUserInputProvider(history_filename=history_filename)
+    session.loop(input_provider)
 
 if __name__ == "__main__":
     main()

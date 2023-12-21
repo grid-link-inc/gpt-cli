@@ -209,3 +209,9 @@ Run `gpt` with the correct model:
 ```bash
 gpt --model chat-bison-001
 ```
+
+# TODO
+- Add backend option [wrapper, assistant] that defaults to wrapper. Clarifies that you either use wrapper and all that config. or an assistant
+- add assistant id arg
+- add assistant name and config
+- above pulls assistant from api and uses it to do completions

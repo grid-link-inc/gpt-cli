@@ -1,11 +1,11 @@
 from typing import Iterator, List, cast
-import openai
-from openai import OpenAI
+import gptcli.gpt_interfaces.wrapper.interfaces.openai as openai
+from gptcli.gpt_interfaces.wrapper.interfaces.openai import OpenAI
 from openai.types.chat import ChatCompletionMessageParam
 
 import tiktoken
 
-from gptcli.completion import CompletionProvider, Message
+from gptcli.gpt_interfaces.completion import CompletionProvider, Message
 
 
 class OpenAICompletionProvider(CompletionProvider):

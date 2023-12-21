@@ -1,6 +1,6 @@
 from typing import Iterator, List
 import google.generativeai as genai
-from gptcli.completion import CompletionProvider, Message
+from gptcli.gpt_interfaces.completion import CompletionProvider, Message
 
 
 def role_to_author(role: str) -> str:

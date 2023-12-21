@@ -3,7 +3,7 @@ import logging
 import sys
 import subprocess
 import tempfile
-from gptcli.wrapper import Wrapper
+from gptcli.gpt_interfaces.wrapper.wrapper import Wrapper
 
 
 def simple_response(wrapper: Wrapper, prompt: str, stream: bool) -> None:

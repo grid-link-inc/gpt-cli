@@ -9,7 +9,7 @@ try:
 except ImportError:
     LLAMA_AVAILABLE = False
 
-from gptcli.completion import CompletionProvider, Message
+from gptcli.gpt_interfaces.completion import CompletionProvider, Message
 
 
 class LLaMAModelConfig(TypedDict):
