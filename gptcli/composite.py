@@ -1,4 +1,5 @@
-from gptcli.gpt_interfaces.completion import Message, ModelOverrides
+
+from gptcli.openai_types import Message
 from gptcli.session import ChatListener, ResponseStreamer
 
 
@@ -53,7 +54,7 @@ class CompositeChatListener(ChatListener):
             listener.on_chat_message(message)
 
     def on_chat_response(
-        self, messages: List[Message], response: Message, overrides: ModelOverrides
+        self, messages: List[Message], response: Message
     ):
         for listener in self.listeners:
-            listener.on_chat_response(messages, response, overrides)
+            listener.on_chat_response(messages, response)

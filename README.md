@@ -215,3 +215,6 @@ gpt --model chat-bison-001
 - add assistant id arg
 - add assistant name and config
 - above pulls assistant from api and uses it to do completions
+
+
+pip install -e .

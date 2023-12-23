@@ -1,11 +1,9 @@
 import os
-from typing import Dict, List, Optional, TypedDict
+from typing import Dict, List, Optional
 from attr import dataclass
 import yaml
 
-from gptcli.gpt_interfaces.wrapper.wrapper import WrapperConfig
-from gptcli.gpt_interfaces.chatgpt_assistant.assistant import AssistantConfig
-from gptcli.gpt_interfaces.wrapper.interfaces.llama import LLaMAModelConfig
+from gptcli.assistant import AssistantConfig
 
 
 CONFIG_FILE_PATHS = [
@@ -16,19 +14,12 @@ CONFIG_FILE_PATHS = [
 
 @dataclass
 class GptCliConfig:
-    default_wrapper: str = "general"
+    default_assistant: str = "asst_jCP75X9phRfVjZ8Q4iBistYT"
     markdown: bool = True
     show_price: bool = True
     api_key: Optional[str] = os.environ.get("OPENAI_API_KEY")
-    openai_api_key: Optional[str] = os.environ.get("OPENAI_API_KEY")
-    anthropic_api_key: Optional[str] = os.environ.get("ANTHROPIC_API_KEY")
-    google_api_key: Optional[str] = os.environ.get("GOOGLE_API_KEY")
     log_file: Optional[str] = None
     log_level: str = "INFO"
-    wrappers: Dict[str, WrapperConfig] = {}
-    interactive: Optional[bool] = None
-    llama_models: Optional[Dict[str, LLaMAModelConfig]] = None
-
     assistants: Dict[str, AssistantConfig] = {}
 
 

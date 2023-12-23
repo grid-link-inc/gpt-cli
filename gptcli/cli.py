@@ -1,7 +1,6 @@
 import re
 from prompt_toolkit import PromptSession
 from prompt_toolkit.history import FileHistory
-from gptcli.gpt_interfaces.wrapper.interfaces.openai import OpenAIError, BadRequestError
 from prompt_toolkit.key_binding import KeyBindings, KeyPressEvent
 from prompt_toolkit.key_binding.bindings import named_commands
 from rich.console import Console
@@ -103,15 +102,7 @@ class CLIChatListener(ChatListener):
             self.console.print("[bold]Nothing to re-run.[/bold]")
 
     def on_error(self, e: Exception):
-        if isinstance(e, BadRequestError):
-            self.console.print(
-                f"[red]Request Error. The last prompt was not saved: {type(e)}: {e}[/red]"
-            )
-        elif isinstance(e, OpenAIError):
-            self.console.print(
-                f"[red]API Error. Type `r` or Ctrl-R to try again: {type(e)}: {e}[/red]"
-            )
-        elif isinstance(e, InvalidArgumentError):
+        if isinstance(e, InvalidArgumentError):
             self.console.print(f"[red]{e.message}[/red]")
         else:
             self.console.print(f"[red]Error: {type(e)}: {e}[/red]")
@@ -149,6 +140,7 @@ class CLIUserInputProvider(UserInputProvider):
             pass
 
         user_input, args = self._parse_input(next_user_input)
+        print(user_input, args)
         return user_input, args
 
     def prompt(self, multiline=False):

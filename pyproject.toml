@@ -31,11 +31,6 @@ dependencies = [
     "typing_extensions==4.5.0",
 ]
 
-[project.optional-dependencies]
-llama = [
-    "llama-cpp-python==0.1.57",
-]
-
 [project.urls]
 "Homepage" = "https://github.com/kharvd/gpt-cli"
 

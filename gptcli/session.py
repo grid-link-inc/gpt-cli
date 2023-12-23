@@ -1,10 +1,8 @@
 from abc import abstractmethod
-from typing_extensions import TypeGuard
-from gptcli.gpt_interfaces.wrapper.wrapper import Wrapper
-from gptcli.gpt_interfaces.completion import Message, ModelOverrides
-from gptcli.gpt_interfaces.wrapper.interfaces.openai import BadRequestError, OpenAIError
+from openai import BadRequestError, OpenAIError
+from gptcli.openai_types import Message
 from typing import Any, Dict, List, Tuple
-
+from gptcli.assistant import Assistant, thread_message_to_text
 
 class ResponseStreamer:
     def __enter__(self) -> "ResponseStreamer":
@@ -37,7 +35,7 @@ class ChatListener:
         pass
 
     def on_chat_response(
-        self, messages: List[Message], response: Message, overrides: ModelOverrides
+        self, messages: List[Message], response: Message
     ):
         pass
 
@@ -66,20 +64,20 @@ Commands:
 - `:help` / `:h` / `:?` - Show this help message.
 """
 
-
 class ChatSession:
+    # This class represents a single CLI session. Including the assistant and messages between it and the user.
     def __init__(
         self,
-        wrapper: Wrapper,
+        assistant: Assistant,
         listener: ChatListener,
     ):
-        self.wrapper = wrapper
-        self.messages: List[Message] = wrapper.init_messages()
-        self.user_prompts: List[Tuple[Message, ModelOverrides]] = []
+        self.assistant = assistant
+        self.messages: List[Message] = assistant.init_messages()
+        self.user_prompts: List[Tuple[Message, None]] = []
         self.listener = listener
 
     def _clear(self):
-        self.messages = self.wrapper.init_messages()
+        self.messages = self.assistant.init_messages()
         self.user_prompts = []
         self.listener.on_chat_clear()
 
@@ -92,27 +90,26 @@ class ChatSession:
             self.messages = self.messages[:-1]
 
         self.listener.on_chat_rerun(True)
-        _, args = self.user_prompts[-1]
-        self._respond(args)
+        self._get_response()
 
-    def _respond(self, args: ModelOverrides) -> bool:
+    def _get_response(self) -> bool:
         """
         Respond to the user's input and return whether the assistant's response was saved.
         """
         next_response: str = ""
         try:
-            # This needs to handle assistant calls
-            # self.wrapper needs to be 
-            completion_iter = self.wrapper.complete_chat(
-                self.messages, override_params=args
-            )
+            self.assistant.run_thread()
+            # Fetch the text of all recent messages
+            thread_messages = self.assistant.fetch_messages(since_last_user_message=True)
+            thread_texts = thread_message_to_text(thread_messages)
+            # TODO add newlines between messages
 
             with self.listener.response_streamer() as stream:
-                for response in completion_iter:
+                for response in thread_texts:
                     next_response += response
                     stream.on_next_token(response)
         except KeyboardInterrupt:
-            # If the user interrupts the chat completion, we'll just return what we have so far
+            # If the user interrupts the response, we'll just return what we have so far
             pass
         except BadRequestError as e:
             self.listener.on_error(e)
@@ -123,28 +120,18 @@ class ChatSession:
 
         next_message: Message = {"role": "assistant", "content": next_response}
         self.listener.on_chat_message(next_message)
-        self.listener.on_chat_response(self.messages, next_message, args)
+        self.listener.on_chat_response(self.messages, next_message)
 
         self.messages = self.messages + [next_message]
         return True
 
-    def _validate_args(self, args: Dict[str, Any]) -> TypeGuard[ModelOverrides]:
-        for key in args:
-            supported_overrides = self.wrapper.supported_overrides()
-            if key not in supported_overrides:
-                self.listener.on_error(
-                    InvalidArgumentError(
-                        f"Invalid argument: {key}. Allowed arguments: {supported_overrides}"
-                    )
-                )
-                return False
-        return True
-
-    def _add_user_message(self, user_input: str, args: ModelOverrides):
+    def _add_user_message(self, user_input: str) -> Message:
         user_message: Message = {"role": "user", "content": user_input}
+        self.assistant.add_message(user_message)
         self.messages = self.messages + [user_message]
         self.listener.on_chat_message(user_message)
-        self.user_prompts.append((user_message, args))
+        self.user_prompts.append((user_message, None)) # TODO un-tuple this
+        return user_message
 
     def _rollback_user_message(self):
         self.messages = self.messages[:-1]
@@ -173,13 +160,25 @@ class ChatSession:
             self._print_help()
             return True
 
-        self._add_user_message(user_input, args)
-        response_saved = self._respond(args)
+        self._add_user_message(user_input)
+        response_saved = self._get_response()
         if not response_saved:
             self._rollback_user_message()
 
         return True
 
+    def _validate_args(self, args: Dict[str, Any]) -> bool:
+        for key in args:
+            supported_overrides = self.assistant.supported_overrides()
+            if key not in supported_overrides:
+                self.listener.on_error(
+                    InvalidArgumentError(
+                        f"Invalid argument: {key}. Allowed arguments: {supported_overrides}"
+                    )
+                )
+                return False
+        return True
+    
     def loop(self, input_provider: UserInputProvider):
         self.listener.on_chat_start()
         while self.process_input(*input_provider.get_user_input()):

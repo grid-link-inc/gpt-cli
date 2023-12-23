@@ -1,0 +1,150 @@
+import sys
+import time
+from attr import dataclass
+from typing import Dict, TypedDict, List
+from openai import OpenAI
+
+from gptcli.openai_types import Message, ThreadMessage, ThreadRun
+
+class AssistantConfig(TypedDict, total=False):
+    id: str
+    messages: List[Message]
+
+
+CONFIG_DEFAULTS = {
+    # "id": "asst_jCP75X9phRfVjZ8Q4iBistYT",
+}
+
+DEFAULT_ASSISTANTS: Dict[str, AssistantConfig] = {}
+
+
+class Assistant():
+    def __init__(self, config: AssistantConfig):
+        self.config = config
+        self.openai_client = OpenAI()
+        # TODO check for errors. Validate config.id
+        self.assistant_handle = self.openai_client.beta.assistants.retrieve(config.get("id"))
+        self.thread = self.openai_client.beta.threads.create()
+        # self.messages_cache = self.init_messages()
+        self.last_user_message_id = None
+
+    @classmethod
+    def from_config(cls, name: str, config: AssistantConfig):
+        config = config.copy()
+        if name in DEFAULT_ASSISTANTS:
+            # Merge the config with the default config
+            # If a key is in both, use the value from the config
+            default_config = DEFAULT_ASSISTANTS[name]
+            for key in [*config.keys(), *default_config.keys()]:
+                if config.get(key) is None:
+                    config[key] = default_config[key]
+
+        return cls(config)
+
+    def init_messages(self) -> List[Message]:
+        return self.config.get("messages", [])[:]
+
+
+    def add_message(self, our_message: Message) -> ThreadMessage:
+        """
+        Send a message to the chatgpt Thread associated with this assistant and return the response.
+        """
+        their_message = self.openai_client.beta.threads.messages.create(
+            thread_id=self.thread.id,
+            role=our_message['role'],
+            content=our_message['content'],
+        )
+        self.last_user_message_id = their_message.id
+        return their_message
+
+    def run_thread(self) -> ThreadRun:
+        """
+        Start a Run on the chatgpt Thread associated with this assistant and wait for it to complete.
+        """
+        run = self.openai_client.beta.threads.runs.create(
+            thread_id=self.thread.id,
+            assistant_id=self.assistant_handle.id,
+            # TODO needed? will this overwrite the one in the assistant? Will the one in the assistant be used if this is not specified?
+            # instructions="You are an advisor that helps people and companies monetize their distributed energy resources. Some examples of distributed energy resources are: batteries like tesla powerwalls, electric vehicles like a nissan leaf, solar panels, smart thermostats, or heat pumps. Your goal is to find programs run by utilities or independent system operators in which the people or customers can enroll their resources and get paid to do so."
+        )
+        while run.status != "completed":
+            time.sleep(2)
+            run = self.openai_client.beta.threads.runs.retrieve(run.id, thread_id=self.thread.id)
+
+        return run
+
+    def fetch_messages(self, since_last_user_message: bool) -> List[ThreadMessage]:
+
+        # TODO keep SyncCursorPage instead of immediately converting to list?
+        messages = list(self.openai_client.beta.threads.messages.list(
+            thread_id=self.thread.id
+        ))
+        # Messages come back in reverse chronological order. We reverse them so they're in chronological order
+        messages.reverse()
+
+        # return all new messages (i.e. all the ones after the one we just added)
+        if since_last_user_message and self.last_user_message_id:
+            last_message_id = self.last_user_message_id
+            message_ids = [message.id for message in messages]
+            last_message_index = message_ids.index(last_message_id)
+            if last_message_index == -1:
+                raise ValueError("last_message_id not found in messages")
+            messages = messages[last_message_index+1:]
+
+        # messages = self.add_citations_to_messages(messages)
+       
+        return messages
+    
+    def add_citations_to_messages(self, messages):  
+        messages_with_citations = []
+        for message in messages[::-1]:
+            # Extract the message content
+            message_content = message.content[0].text
+            annotations = message_content.annotations
+            citations = []
+
+            # Iterate over the annotations and add footnotes
+            for index, annotation in enumerate(annotations):
+                # Replace the text with a footnote
+                message_content.value = message_content.value.replace(annotation.text, f' [{index}]')
+
+                # Gather citations based on annotation attributes
+                if (file_citation := getattr(annotation, 'file_citation', None)):
+                    cited_file = self.openai_client.files.retrieve(file_citation.file_id)
+                    citations.append(f'[{index}] {file_citation.quote} from {cited_file.filename}')
+                elif (file_path := getattr(annotation, 'file_path', None)):
+                    cited_file = self.openai_client.files.retrieve(file_path.file_id)
+                    citations.append(f'[{index}] Click <here> to download {cited_file.filename}')
+                    # Note: File download functionality not implemented above for brevity
+
+            # Add footnotes to the end of the message before displaying to user
+            message_content.value += '\n' + '\n'.join(citations)
+            print(message_content.value)
+            messages_with_citations.append(message_content.value)
+        
+        return messages_with_citations
+
+
+@dataclass
+class AssistantGlobalArgs:
+    assistant_name: str
+
+def init_assistant(
+    args: AssistantGlobalArgs, custom_assistants: Dict[str, AssistantConfig]
+) -> Assistant:
+    name = args.assistant_name
+    if name in custom_assistants:
+        assistant = Assistant.from_config(name, custom_assistants[name])
+    elif name in DEFAULT_ASSISTANTS:
+        assistant = Assistant.from_config(name, DEFAULT_ASSISTANTS[name])
+    else:
+        print(f"Unknown assistant: {name}")
+        sys.exit(1)
+
+    return assistant
+
+def thread_message_to_text(thread_messages: ThreadMessage) -> str:
+    thread_messages = [content for thread_message in thread_messages for content in thread_message.content]
+    thread_contents = filter(lambda content: content.type == "text", thread_messages)
+    thread_texts = [content.text.value for content in thread_contents]
+    return thread_texts

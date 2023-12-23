@@ -2,26 +2,22 @@
 
 import sys
 
+import gptcli
+
 MIN_PYTHON = (3, 9)
 if sys.version_info < MIN_PYTHON:
     sys.exit("Python %s.%s or later is required.\n" % MIN_PYTHON)
 
 import os
 from typing import cast
-import gptcli.gpt_interfaces.wrapper.interfaces.openai as openai
+import gptcli.openai_utils as openai_utils
 import argparse
 import sys
-import logging
+# import logging
 import datetime
-import google.generativeai as genai
-import gptcli.gpt_interfaces.wrapper.interfaces.anthropic
-from gptcli.gpt_interfaces.wrapper.wrapper import (
-    Wrapper,
-    DEFAULT_WRAPPER,
-    WrapperGlobalArgs,
-    init_wrapper,
-)
-from gptcli.gpt_interfaces.chatgpt_assistant.assistant import (
+
+
+from gptcli.assistant import (
     Assistant,
     DEFAULT_ASSISTANTS,
     AssistantGlobalArgs,
@@ -38,20 +34,18 @@ from gptcli.config import (
     choose_config_file,
     read_yaml_config,
 )
-from gptcli.gpt_interfaces.wrapper.interfaces.llama import init_llama_models
-from gptcli.logging import LoggingChatListener
-from gptcli.cost import PriceChatListener
+# from gptcli.logging import LoggingChatListener
+# from gptcli.cost import PriceChatListener
 from gptcli.session import ChatSession
-from gptcli.shell import execute, simple_response
 
-
-logger = logging.getLogger("gptcli")
+# TODO
+# logger = logging.getLogger("gptcli")
 
 default_exception_handler = sys.excepthook
 
 
 def exception_handler(type, value, traceback):
-    logger.exception("Uncaught exception", exc_info=(type, value, traceback))
+    # logger.exception("Uncaught exception", exc_info=(type, value, traceback))
     print("An uncaught exception occurred. Please report this issue on GitHub.")
     default_exception_handler(type, value, traceback)
 
@@ -64,12 +58,12 @@ def parse_args(config: GptCliConfig):
         description="Run a chat session with ChatGPT. See https://github.com/kharvd/gpt-cli for more information."
     )
     parser.add_argument(
-        "wrapper_name",
+        "assistant_name",
         type=str,
-        default=config.default_wrapper,
+        default=config.default_assistant,
         nargs="?",
-        choices=list(set([*DEFAULT_WRAPPER.keys(), *config.wrappers.keys()])),
-        help="The name of wrapper to use. `general` (default) is a generally helpful wrapper, `dev` is a software development wrapper with shorter responses. You can specify your own wrappers in the config file ~/.config/gpt-cli/gpt.yml. See the README for more information.",
+        choices=list(set([*DEFAULT_ASSISTANTS.keys(), *config.assistants.keys()])),
+        help="The name of assistant to use. `general` (default) is a generally helpful assistant, `dev` is a software development assistant with shorter responses. You can specify your own assistants in the config file ~/.config/gpt-cli/gpt.yml. See the README for more information.",
     )
     parser.add_argument(
         "--no_markdown",
@@ -77,24 +71,6 @@ def parse_args(config: GptCliConfig):
         dest="markdown",
         help="Disable markdown formatting in the chat session.",
         default=config.markdown,
-    )
-    parser.add_argument(
-        "--model",
-        type=str,
-        default=None,
-        help="The model to use for the chat session. Overrides the default model defined for the wrapper.",
-    )
-    parser.add_argument(
-        "--temperature",
-        type=float,
-        default=None,
-        help="The temperature to use for the chat session. Overrides the default temperature defined for the wrapper.",
-    )
-    parser.add_argument(
-        "--top_p",
-        type=float,
-        default=None,
-        help="The top_p to use for the chat session. Overrides the default top_p defined for the wrapper.",
     )
     parser.add_argument(
         "--log_file",
@@ -108,21 +84,6 @@ def parse_args(config: GptCliConfig):
         default=config.log_level,
         choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
         help="The log level to use",
-    )
-    parser.add_argument(
-        "--prompt",
-        "-p",
-        type=str,
-        action="append",
-        default=None,
-        help="If specified, will not start an interactive chat session and instead will print the response to standard output and exit. May be specified multiple times. Use `-` to read the prompt from standard input. Implies --no_markdown.",
-    )
-    parser.add_argument(
-        "--execute",
-        "-e",
-        type=str,
-        default=None,
-        help="If specified, passes the prompt to the wrapper and allows the user to edit the produced shell command before executing it. Implies --no_stream. Use `-` to read the prompt from standard input.",
     )
     parser.add_argument(
         "--no_stream",
@@ -166,97 +127,46 @@ def main():
 
     if args.log_file is not None:
         filename = datetime.datetime.now().strftime(args.log_file)
-        logging.basicConfig(
-            filename=filename,
-            level=args.log_level,
-            format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-        )
-        # Disable overly verbose logging for markdown_it
-        logging.getLogger("markdown_it").setLevel(logging.INFO)
+        # TODO
+        # logging.basicConfig(
+        #     filename=filename,
+        #     level=args.log_level,
+        #     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+        # )
+        # # Disable overly verbose logging for markdown_it
+        # logging.getLogger("markdown_it").setLevel(logging.INFO)
 
     if config.api_key:
-        openai.api_key = config.api_key
+        openai_utils.api_key = config.api_key
     elif config.openai_api_key:
-        openai.api_key = config.openai_api_key
+        openai_utils.api_key = config.openai_api_key
     else:
         print(
             "No API key found. Please set the OPENAI_API_KEY environment variable or `api_key: <key>` value in ~/.config/gpt-cli/gpt.yml"
         )
         sys.exit(1)
 
-    if config.anthropic_api_key:
-        gptcli.gpt_interfaces.wrapper.interfaces.anthropic.api_key = config.anthropic_api_key
-
-    if config.google_api_key:
-        genai.configure(api_key=config.google_api_key)
-
-    if config.llama_models is not None:
-        init_llama_models(config.llama_models)
-
-    if config.backend == "wrapper":
-        wrapper = init_wrapper(cast(WrapperGlobalArgs, args), config.wrappers)
-        if args.prompt is not None:
-            run_non_interactive(args, wrapper)
-        elif args.execute is not None:
-            run_execute(args, wrapper)
-        else:
-            run_interactive(args, wrapper)
-    else:
-        assistant = init_assistant(cast(AssistantGlobalArgs, args), config.assistants)
-        run_assistant(args, assistant)
-
-
-def run_execute(args, wrapper):
-    logger.info(
-        "Starting a non-interactive execution session with prompt '%s'. Wrapper config: %s",
-        args.prompt,
-        wrapper.config,
-    )
-    if args.execute == "-":
-        args.execute = "".join(sys.stdin.readlines())
-    execute(wrapper, args.execute)
-
-
-def run_non_interactive(args, wrapper):
-    logger.info(
-        "Starting a non-interactive session with prompt '%s'. Wrapper config: %s",
-        args.prompt,
-        wrapper.config,
-    )
-    if "-" in args.prompt:
-        args.prompt[args.prompt.index("-")] = "".join(sys.stdin.readlines())
-
-    simple_response(wrapper, "\n".join(args.prompt), stream=not args.no_stream)
-
+    assistant = init_assistant(cast(AssistantGlobalArgs, args), config.assistants)
+    run_interactive(args, assistant)
 
 class CLIChatSession(ChatSession):
-    def __init__(self, wrapper: Wrapper, markdown: bool, show_price: bool):
+    def __init__(self, assistant: Assistant, markdown: bool, show_price: bool):
         listeners = [
             CLIChatListener(markdown),
-            LoggingChatListener(),
+            # LoggingChatListener(), TODO
         ]
 
-        if show_price:
-            listeners.append(PriceChatListener(wrapper))
+        # if show_price:
+        #     listeners.append(PriceChatListener(assistant))
 
         listener = CompositeChatListener(listeners)
-        super().__init__(wrapper, listener)
+        super().__init__(assistant, listener)
 
 
-def run_interactive(args, wrapper):
-    logger.info("Starting a new chat session. Wrapper config: %s", wrapper.config)
+def run_interactive(args, assistant):
+    # logger.info("Starting a new chat session. Config: %s", assistant.config)
     session = CLIChatSession(
-        wrapper=wrapper, markdown=args.markdown, show_price=args.show_price
-    )
-    history_filename = os.path.expanduser("~/.config/gpt-cli/history")
-    os.makedirs(os.path.dirname(history_filename), exist_ok=True)
-    input_provider = CLIUserInputProvider(history_filename=history_filename)
-    session.loop(input_provider)
-
-def run_assistant(args, assistant):
-    logger.info("Starting a new chat session. Assistant config: %s", assistant.config)
-    session = CLIChatSession(
-        wrapper=assistant, markdown=args.markdown, show_price=args.show_price
+        assistant=assistant, markdown=args.markdown, show_price=args.show_price
     )
     history_filename = os.path.expanduser("~/.config/gpt-cli/history")
     os.makedirs(os.path.dirname(history_filename), exist_ok=True)
