@@ -18,7 +18,15 @@ CONFIG_DEFAULTS = {
 DEFAULT_ASSISTANTS: Dict[str, AssistantConfig] = {}
 
 
-class Assistant():
+class AssistantThread():
+    """
+    A class to represent an assistant thread.
+
+    Upon instantiation, a new thread is created against the given ChatGPT Assistant
+
+    In future we can decouple Assistants from Threads: 
+    - create an Assistant class that can contain multiple AssistantThreads.
+    """
     def __init__(self, config: AssistantConfig):
         self.config = config
         self.openai_client = OpenAI()
@@ -75,11 +83,12 @@ class Assistant():
 
     def fetch_messages(self, since_last_user_message: bool) -> List[ThreadMessage]:
 
-        # TODO keep SyncCursorPage instead of immediately converting to list?
+        # TODO keep SyncCursorPage instead of immediately converting to list? 
+        # May become a problem when threads become long enough to split into multiple pages
         messages = list(self.openai_client.beta.threads.messages.list(
             thread_id=self.thread.id
         ))
-        # Messages come back in reverse chronological order. We reverse them so they're in chronological order
+        # Messages come back in reverse chronological order. We reverse them.
         messages.reverse()
 
         # return all new messages (i.e. all the ones after the one we just added)
@@ -91,14 +100,15 @@ class Assistant():
                 raise ValueError("last_message_id not found in messages")
             messages = messages[last_message_index+1:]
 
-        # messages = self.add_citations_to_messages(messages)
-       
-        return messages
+        return self.add_citations_to_messages(messages)
     
     def add_citations_to_messages(self, messages):  
         messages_with_citations = []
-        for message in messages[::-1]:
+        for message in messages:
             # Extract the message content
+            # Assumes one text message per message
+            if len(message.content) > 1:
+                raise ValueError("Unimplemented: More than one text message per message")
             message_content = message.content[0].text
             annotations = message_content.annotations
             citations = []
@@ -109,21 +119,27 @@ class Assistant():
                 message_content.value = message_content.value.replace(annotation.text, f' [{index}]')
 
                 # Gather citations based on annotation attributes
+                # TODO cache file retrievals
+                # TOOD implement file download links
                 if (file_citation := getattr(annotation, 'file_citation', None)):
                     cited_file = self.openai_client.files.retrieve(file_citation.file_id)
-                    citations.append(f'[{index}] {file_citation.quote} from {cited_file.filename}')
+                    searchable_quote = ' '.join(file_citation.quote.split()[:6])
+                    citations.append(f'[{index}] {cited_file.filename} - (Search: "{searchable_quote}")')
                 elif (file_path := getattr(annotation, 'file_path', None)):
                     cited_file = self.openai_client.files.retrieve(file_path.file_id)
                     citations.append(f'[{index}] Click <here> to download {cited_file.filename}')
-                    # Note: File download functionality not implemented above for brevity
 
             # Add footnotes to the end of the message before displaying to user
-            message_content.value += '\n' + '\n'.join(citations)
-            print(message_content.value)
+            message_content.value += '\n\n' + '\n'.join(citations)
             messages_with_citations.append(message_content.value)
         
-        return messages_with_citations
+        return messages
 
+    def get_thread_id(self):
+        return self.thread.id
+    
+    def get_assistant_id(self):
+        return self.assistant_handle.id
 
 @dataclass
 class AssistantGlobalArgs:
@@ -131,12 +147,12 @@ class AssistantGlobalArgs:
 
 def init_assistant(
     args: AssistantGlobalArgs, custom_assistants: Dict[str, AssistantConfig]
-) -> Assistant:
+) -> AssistantThread:
     name = args.assistant_name
     if name in custom_assistants:
-        assistant = Assistant.from_config(name, custom_assistants[name])
+        assistant = AssistantThread.from_config(name, custom_assistants[name])
     elif name in DEFAULT_ASSISTANTS:
-        assistant = Assistant.from_config(name, DEFAULT_ASSISTANTS[name])
+        assistant = AssistantThread.from_config(name, DEFAULT_ASSISTANTS[name])
     else:
         print(f"Unknown assistant: {name}")
         sys.exit(1)

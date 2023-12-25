@@ -140,7 +140,6 @@ class CLIUserInputProvider(UserInputProvider):
             pass
 
         user_input, args = self._parse_input(next_user_input)
-        print(user_input, args)
         return user_input, args
 
     def prompt(self, multiline=False):

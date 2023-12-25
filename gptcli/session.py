@@ -2,7 +2,7 @@ from abc import abstractmethod
 from openai import BadRequestError, OpenAIError
 from gptcli.openai_types import Message
 from typing import Any, Dict, List, Tuple
-from gptcli.assistant import Assistant, thread_message_to_text
+from gptcli.assistant import AssistantThread, thread_message_to_text
 
 class ResponseStreamer:
     def __enter__(self) -> "ResponseStreamer":
@@ -68,7 +68,7 @@ class ChatSession:
     # This class represents a single CLI session. Including the assistant and messages between it and the user.
     def __init__(
         self,
-        assistant: Assistant,
+        assistant: AssistantThread,
         listener: ChatListener,
     ):
         self.assistant = assistant

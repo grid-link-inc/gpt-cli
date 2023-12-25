@@ -18,7 +18,7 @@ import datetime
 
 
 from gptcli.assistant import (
-    Assistant,
+    AssistantThread,
     DEFAULT_ASSISTANTS,
     AssistantGlobalArgs,
     init_assistant,
@@ -34,7 +34,8 @@ from gptcli.config import (
     choose_config_file,
     read_yaml_config,
 )
-# from gptcli.logging import LoggingChatListener
+from gptcli.logging_utils import LoggingChatListener
+from gptcli.persist import PersistChatListener
 # from gptcli.cost import PriceChatListener
 from gptcli.session import ChatSession
 
@@ -150,10 +151,11 @@ def main():
     run_interactive(args, assistant)
 
 class CLIChatSession(ChatSession):
-    def __init__(self, assistant: Assistant, markdown: bool, show_price: bool):
+    def __init__(self, assistant: AssistantThread, markdown: bool, show_price: bool):
         listeners = [
             CLIChatListener(markdown),
-            # LoggingChatListener(), TODO
+            LoggingChatListener(),
+            # PersistChatListener(assistant.get_thread_id(), assistant.get_assistant_id()),
         ]
 
         # if show_price:
