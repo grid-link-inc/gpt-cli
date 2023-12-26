@@ -13,8 +13,6 @@ from typing import cast
 import gptcli.openai_utils as openai_utils
 import argparse
 import sys
-# import logging
-import datetime
 
 
 from gptcli.assistant import (
@@ -39,14 +37,10 @@ from gptcli.persist import PersistChatListener
 # from gptcli.cost import PriceChatListener
 from gptcli.session import ChatSession
 
-# TODO
-# logger = logging.getLogger("gptcli")
-
 default_exception_handler = sys.excepthook
 
 
 def exception_handler(type, value, traceback):
-    # logger.exception("Uncaught exception", exc_info=(type, value, traceback))
     print("An uncaught exception occurred. Please report this issue on GitHub.")
     default_exception_handler(type, value, traceback)
 
@@ -64,7 +58,7 @@ def parse_args(config: GptCliConfig):
         default=config.default_assistant,
         nargs="?",
         choices=list(set([*DEFAULT_ASSISTANTS.keys(), *config.assistants.keys()])),
-        help="The name of assistant to use. `general` (default) is a generally helpful assistant, `dev` is a software development assistant with shorter responses. You can specify your own assistants in the config file ~/.config/gpt-cli/gpt.yml. See the README for more information.",
+        help="The name of assistant to use. Name must match an assistant in the config file ~/.config/gpt-cli/gpt.yml. See the README for more information.",
     )
     parser.add_argument(
         "--no_markdown",
@@ -110,14 +104,6 @@ def parse_args(config: GptCliConfig):
     return parser.parse_args()
 
 
-def validate_args(args):
-    if args.prompt is not None and args.execute is not None:
-        print(
-            "The --prompt and --execute options are mutually exclusive. Please specify only one of them."
-        )
-        sys.exit(1)
-
-
 def main():
     config_file_path = choose_config_file(CONFIG_FILE_PATHS)
     if config_file_path:
@@ -125,17 +111,6 @@ def main():
     else:
         config = GptCliConfig()
     args = parse_args(config)
-
-    if args.log_file is not None:
-        filename = datetime.datetime.now().strftime(args.log_file)
-        # TODO
-        # logging.basicConfig(
-        #     filename=filename,
-        #     level=args.log_level,
-        #     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-        # )
-        # # Disable overly verbose logging for markdown_it
-        # logging.getLogger("markdown_it").setLevel(logging.INFO)
 
     if config.api_key:
         openai_utils.api_key = config.api_key
@@ -155,7 +130,7 @@ class CLIChatSession(ChatSession):
         listeners = [
             CLIChatListener(markdown),
             LoggingChatListener(),
-            # PersistChatListener(assistant.get_thread_id(), assistant.get_assistant_id()),
+            PersistChatListener(assistant.get_thread_id(), assistant.get_assistant_id()),
         ]
 
         # if show_price:
@@ -166,7 +141,6 @@ class CLIChatSession(ChatSession):
 
 
 def run_interactive(args, assistant):
-    # logger.info("Starting a new chat session. Config: %s", assistant.config)
     session = CLIChatSession(
         assistant=assistant, markdown=args.markdown, show_price=args.show_price
     )

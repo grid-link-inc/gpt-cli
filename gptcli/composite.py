@@ -58,3 +58,9 @@ class CompositeChatListener(ChatListener):
     ):
         for listener in self.listeners:
             listener.on_chat_response(messages, response)
+    
+    def on_chat_end(
+        self
+    ):
+        for listener in self.listeners:
+            listener.on_chat_end()

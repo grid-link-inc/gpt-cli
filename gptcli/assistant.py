@@ -10,9 +10,54 @@ class AssistantConfig(TypedDict, total=False):
     id: str
     messages: List[Message]
 
+class Text:
+    def __init__(self, annotations, value):
+        self.annotations = annotations
+        self.value = value
+
+class MessageContentText:
+    def __init__(self, text, type):
+        self.text = text
+        self.type = type
+
+class ThreadMessage:
+    def __init__(self, id, assistant_id, content, created_at, file_ids, metadata, object, role, run_id, thread_id):
+        self.id = id
+        self.assistant_id = assistant_id
+        self.content = [MessageContentText(Text(c['text']['annotations'], c['text']['value']), c['type']) for c in content]
+        self.created_at = created_at
+        self.file_ids = file_ids
+        self.metadata = metadata
+        self.object = object
+        self.role = role
+        self.run_id = run_id
+        self.thread_id = thread_id
+
+# Instantiate the ThreadMessage object with the given data
+tmp_thread_message = ThreadMessage(
+    id="msg_feBzkJcQlHRyg4BsLm9GHwwf",
+    assistant_id="asst_jCP75X9phRfVjZ8Q4iBistYT",
+    content=[
+        {
+            "text": {
+                "annotations": [],
+                "value": "Metering in CAISO involves various methods to ensure the accuracy and reliability of meter data used for billing and settlement purposes. This includes main versus backup meter configurations, point-to-point interpolation for missing data, historical data estimation for data replacement, and audit standards for certified metering facilities."
+            },
+            "type": "text"
+        }
+    ],
+    created_at=1703532865,
+    file_ids=[],
+    metadata={},
+    object="thread.message",
+    role="assistant",
+    run_id="run_ZuVSExmplLDv2Z76FJNRXEzw",
+    thread_id="thread_RSkXNj7NpXmAdgUTDc8Fm3XX"
+)
+
 
 CONFIG_DEFAULTS = {
-    # "id": "asst_jCP75X9phRfVjZ8Q4iBistYT",
+    "id": "asst_jCP75X9phRfVjZ8Q4iBistYT",
 }
 
 DEFAULT_ASSISTANTS: Dict[str, AssistantConfig] = {}
@@ -30,6 +75,7 @@ class AssistantThread():
     def __init__(self, config: AssistantConfig):
         self.config = config
         self.openai_client = OpenAI()
+
         # TODO check for errors. Validate config.id
         self.assistant_handle = self.openai_client.beta.assistants.retrieve(config.get("id"))
         self.thread = self.openai_client.beta.threads.create()
@@ -54,6 +100,7 @@ class AssistantThread():
 
 
     def add_message(self, our_message: Message) -> ThreadMessage:
+        # return tmp_thread_message
         """
         Send a message to the chatgpt Thread associated with this assistant and return the response.
         """
@@ -66,6 +113,7 @@ class AssistantThread():
         return their_message
 
     def run_thread(self) -> ThreadRun:
+        # return
         """
         Start a Run on the chatgpt Thread associated with this assistant and wait for it to complete.
         """
@@ -75,6 +123,7 @@ class AssistantThread():
             # TODO needed? will this overwrite the one in the assistant? Will the one in the assistant be used if this is not specified?
             # instructions="You are an advisor that helps people and companies monetize their distributed energy resources. Some examples of distributed energy resources are: batteries like tesla powerwalls, electric vehicles like a nissan leaf, solar panels, smart thermostats, or heat pumps. Your goal is to find programs run by utilities or independent system operators in which the people or customers can enroll their resources and get paid to do so."
         )
+        # TODO move out of this function. use some sort of async primitive instead?
         while run.status != "completed":
             time.sleep(2)
             run = self.openai_client.beta.threads.runs.retrieve(run.id, thread_id=self.thread.id)
@@ -82,6 +131,7 @@ class AssistantThread():
         return run
 
     def fetch_messages(self, since_last_user_message: bool) -> List[ThreadMessage]:
+        # return [tmp_thread_message]
 
         # TODO keep SyncCursorPage instead of immediately converting to list? 
         # May become a problem when threads become long enough to split into multiple pages

@@ -39,6 +39,11 @@ class ChatListener:
     ):
         pass
 
+    def on_chat_end(
+        self
+    ):
+        pass
+
 
 class UserInputProvider:
     @abstractmethod
@@ -98,7 +103,7 @@ class ChatSession:
         """
         next_response: str = ""
         try:
-            self.assistant.run_thread()
+            # self.assistant.run_thread()
             # Fetch the text of all recent messages
             thread_messages = self.assistant.fetch_messages(since_last_user_message=True)
             thread_texts = thread_message_to_text(thread_messages)
@@ -118,11 +123,11 @@ class ChatSession:
             self.listener.on_error(e)
             return True
 
-        next_message: Message = {"role": "assistant", "content": next_response}
-        self.listener.on_chat_message(next_message)
-        self.listener.on_chat_response(self.messages, next_message)
+        response_message: Message = {"role": "assistant", "content": next_response}
+        self.listener.on_chat_message(response_message)
+        self.listener.on_chat_response(self.messages, response_message)
 
-        self.messages = self.messages + [next_message]
+        self.messages = self.messages + [response_message]
         return True
 
     def _add_user_message(self, user_input: str) -> Message:
@@ -141,6 +146,9 @@ class ChatSession:
         with self.listener.response_streamer() as stream:
             stream.on_next_token(COMMANDS_HELP)
 
+    def _quit(self):
+        self.listener.on_chat_end()
+
     def process_input(self, user_input: str, args: Dict[str, Any]):
         """
         Process the user's input and return whether the session should continue.
@@ -149,6 +157,7 @@ class ChatSession:
             return True
 
         if user_input in COMMAND_QUIT:
+            self._quit()
             return False
         elif user_input in COMMAND_CLEAR:
             self._clear()
