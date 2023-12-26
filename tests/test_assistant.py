@@ -1,9 +1,9 @@
 # import pytest
-# from gptcli.gpt_interfaces.wrapper.wrapper import WrapperGlobalArgs, init_wrapper
+# from gptcli.gpt_interfaces.assistant.assistant import WrapperGlobalArgs, init_assistant
 
 
 # @pytest.mark.parametrize(
-#     "args,custom_wrappers,expected_config",
+#     "args,custom_assistants,expected_config",
 #     [
 #         (
 #             WrapperGlobalArgs("dev"),
@@ -66,8 +66,8 @@
 #         ),
 #     ],
 # )
-# def test_init_wrapper(args, custom_wrappers, expected_config):
-#     wrapper = init_wrapper(args, custom_wrappers)
-#     assert wrapper.config.get("model") == expected_config.get("model")
-#     assert wrapper.config.get("temperature") == expected_config.get("temperature")
-#     assert wrapper.config.get("top_p") == expected_config.get("top_p")
+# def test_init_assistant(args, custom_assistants, expected_config):
+#     assistant = init_assistant(args, custom_assistants)
+#     assert assistant.config.get("model") == expected_config.get("model")
+#     assert assistant.config.get("temperature") == expected_config.get("temperature")
+#     assert assistant.config.get("top_p") == expected_config.get("top_p")

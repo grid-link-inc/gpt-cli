@@ -103,7 +103,7 @@ class ChatSession:
         """
         next_response: str = ""
         try:
-            # self.assistant.run_thread()
+            self.assistant.run_thread()
             # Fetch the text of all recent messages
             thread_messages = self.assistant.fetch_messages(since_last_user_message=True)
             thread_texts = thread_message_to_text(thread_messages)
