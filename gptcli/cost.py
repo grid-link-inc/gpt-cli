@@ -5,6 +5,7 @@ from gptcli.openai_utils import (
     num_tokens_from_messages_openai,
 )
 from gptcli.session import ChatListener
+from gptcli.assistant import AssistantThread
 
 
 from rich.console import Console
@@ -110,32 +111,31 @@ def price_for_completion(messages: List[Message], response: Message, model: str)
         + price_per_token_response * num_tokens_response
     )
 
-# TODO
-# class PriceChatListener(ChatListener):
-#     def __init__(self, assistant: Assistant):
-#         self.assistant = assistant
-#         self.current_spend = 0
-#         self.logger = logging.getLogger("gptcli-price")
-#         self.console = Console()
+class PriceChatListener(ChatListener):
+    def __init__(self, assistant: AssistantThread):
+        self.assistant = assistant
+        self.current_spend = 0
+        self.logger = logging.getLogger("gptcli-price")
+        self.console = Console()
 
-#     def on_chat_clear(self):
-#         self.current_spend = 0
+    def on_chat_clear(self):
+        self.current_spend = 0
 
-#     def on_chat_response(
-#         self, messages: List[Message], response: Message
-#     ):
-#         model = self.assistant._param("model", args)
-#         num_tokens = num_tokens_from_messages(messages + [response], model)
-#         price = price_for_completion(messages, response, model)
-#         if price is None:
-#             self.logger.error(f"Cannot get cost information for model {model}")
-#             return
-#         self.current_spend += price
-#         self.logger.info(f"Token usage {num_tokens}")
-#         self.logger.info(f"Message price (model: {model}): ${price:.3f}")
-#         self.logger.info(f"Current spend: ${self.current_spend:.3f}")
-#         self.console.print(
-#             f"Tokens: {num_tokens} | Price: ${price:.3f} | Total: ${self.current_spend:.3f}",
-#             justify="right",
-#             style="dim",
-#         )
+    def on_chat_response(
+        self, messages: List[Message], response: Message
+    ):
+        model = self.assistant._param("model")
+        num_tokens = num_tokens_from_messages(messages + [response], model)
+        price = price_for_completion(messages, response, model)
+        if price is None:
+            self.logger.error(f"Cannot get cost information for model {model}")
+            return
+        self.current_spend += price
+        self.logger.info(f"Token usage {num_tokens}")
+        self.logger.info(f"Message price (model: {model}): ${price:.3f}")
+        self.logger.info(f"Current spend: ${self.current_spend:.3f}")
+        self.console.print(
+            f"Tokens: {num_tokens} | Price: ${price:.3f} | Total: ${self.current_spend:.3f}",
+            justify="right",
+            style="dim",
+        )

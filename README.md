@@ -117,3 +117,10 @@ $ gpt my_other_assistant
 
 > 
 ```
+
+
+## Testing
+
+```
+pytest tests
+```

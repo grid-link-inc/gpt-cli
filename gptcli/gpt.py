@@ -34,7 +34,7 @@ from gptcli.config import (
 )
 from gptcli.logging_utils import LoggingChatListener
 from gptcli.persist import PersistChatListener
-# from gptcli.cost import PriceChatListener
+from gptcli.cost import PriceChatListener
 from gptcli.session import ChatSession
 
 default_exception_handler = sys.excepthook
