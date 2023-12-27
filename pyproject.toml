@@ -1,6 +1,6 @@
 [project]
 name = "openai-assistants-cli"
-version = "0.1.0"
+version = "0.1.1"
 description = "Command-line interface for ChatGPT Assistants: https://platform.openai.com/docs/assistants/overview"
 authors = [{name = "Lyon Lay", email = "lay.lyon@gmail.com"}]
 readme = "README.md"

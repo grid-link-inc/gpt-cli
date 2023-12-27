@@ -2,7 +2,6 @@
 
 Command-line interface for ChatGPT Assistants: https://platform.openai.com/docs/assistants/overview.
 
-![screenshot](https://github.com/grid-link-inc/gpt-cli/assets/466920/ecbcccc4-7cfa-4c04-83c3-a822b6596f01)
 
 ## Features
 
@@ -141,15 +140,15 @@ pytest tests
 # Publishing
 
 ```
-## Setup
+## Build
 pip install build
 python -m build
 
 ## Test it
 pip install twine
-twine upload --repository testpypi dist/*
 twine upload --repository testpypi dist/* --username __token__ # Use your API token as the password when promtped
 pip install --index-url https://test.pypi.org/simple/ openai-assistants-cli
 
 ## Publish
+twine upload dist/* --username __token__ # Use your API token as the password when promtped
 ```

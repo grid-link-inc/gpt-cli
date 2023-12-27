@@ -25,7 +25,6 @@ share/python-wheels/
 .installed.cfg
 *.egg
 MANIFEST
-.logs
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
@@ -161,3 +160,9 @@ cython_debug/
 #.idea/
 
 .vscode/
+
+# MacOS
+.DS_store
+
+# Application
+.logs
