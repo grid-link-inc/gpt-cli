@@ -18,7 +18,7 @@ CONFIG_FILE_PATHS = [
 
 @dataclass
 class GptCliConfig:
-    default_assistant: str = "asst_jCP75X9phRfVjZ8Q4iBistYT"
+    default_assistant: str = ""
     markdown: bool = True
     show_price: bool = True
     api_key: Optional[str] = os.environ.get("OPENAI_API_KEY")

@@ -1,5 +1,5 @@
 [project]
-name = "gpt-assistant-command-line"
+name = "openai-assistant-cli"
 version = "0.1.0"
 description = "Command-line interface for ChatGPT Assistants"
 authors = [{name = "Lyon Lay", email = "lay.lyon@gmail.com"}]
@@ -30,10 +30,10 @@ dependencies = [
 ]
 
 [project.urls]
-"Homepage" = "https://github.com/kharvd/gpt-cli"
+"Homepage" = "https://github.com/grid-link-inc/gpt-cli"
 
 [project.scripts]
-gpt_assistant = "gptcli.gpt:main"
+openai-assistant-cli = "gptcli.gpt:main"
 
 [build-system]
 requires = ["pip>=23.0.0", "setuptools>=58.0.0", "wheel"]

@@ -1,35 +1,36 @@
 # gpt-cli
 
-Command-line interface for ChatGPT Claude and Bard.
+Command-line interface for ChatGPT Assistants.
 
-![screenshot](https://github.com/kharvd/gpt-cli/assets/466920/ecbcccc4-7cfa-4c04-83c3-a822b6596f01)
+![screenshot](https://github.com/grid-link-inc/gpt-cli/assets/466920/ecbcccc4-7cfa-4c04-83c3-a822b6596f01)
 
 ## Features
 
-### **Coming soon** - Code Interpreter support https://github.com/kharvd/gpt-cli/pull/37
-
 - **Command-Line Interface**: Interact with ChatGPT or Claude directly from your terminal.
 - **Multiple Assistants**: Easily switch between different assistants defined in the config file.
-- **Usage tracking**: Track your API usage with token count and price information.
 - **Keyboard Shortcuts**: Use Ctrl-C, Ctrl-D, and Ctrl-R shortcuts for easier conversation management and input control.
 - **Multi-Line Input**: Enter multi-line mode for more complex queries or conversations.
 - **Markdown Support**: Enable or disable markdown formatting for chat sessions to tailor the output to your preferences.
+- **Logging**: Log your conversations to disk or stdout
+
+### Coming Soon
+- **Usage tracking**: Track your API usage with token count and price information.
 
 ## Installation
 
 This install assumes a Linux/OSX machine with Python and pip available.
 ```bash
-pip install gpt-command-line
+pip install openai-assistant-cli
 ```
 
 Install latest version from source:
 ```bash
-pip install git+https://github.com/kharvd/gpt-cli.git
+pip install git+https://github.com/grid-link-inc/gpt-cli
 ```
 
 Or install by cloning the repository manually:
 ```bash
-git clone https://github.com/kharvd/gpt-cli.git
+git clone https://github.com/grid-link-inc/gpt-cli
 cd gpt-cli
 pip install .
 ```
@@ -45,7 +46,7 @@ export OPENAI_API_KEY=<your_key_here>
 Run the tool
 
 ```
-gpt
+openai-assistant-cli
 ```
 
 You can also use a `gpt.yml` file for configuration. See the [Configuration](README.md#Configuration) section below.
@@ -54,13 +55,15 @@ You can also use a `gpt.yml` file for configuration. See the [Configuration](REA
 
 Make sure to set the `OPENAI_API_KEY` environment variable to your OpenAI API key (or put it in the `~/.config/gpt-cli/gpt.yml` file as described below).
 
+Add your assistant to the config file. See `Configuration` below. (TODO Add assistant-id arg and use this in Usage/quickstart)
+
 ```
-usage: gpt [-h] [--no_markdown] 
+usage: openai-assistant-cli [-h] [--no_markdown] 
               [--log_level {DEBUG,INFO,WARNING,ERROR,CRITICAL}]
               [--no_stream]
-              [{dev,general,bash}]
+              [{assistant-name}]
 
-Run a chat session with ChatGPT. See https://github.com/kharvd/gpt-cli for more information.
+Run a chat session with ChatGPT. See https://github.com/grid-link-inc/gpt-cli for more information.
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -97,7 +100,7 @@ assistants:
 
 You can override the parameters for the pre-defined assistants as well.
 
-You can specify the default assistant to use by setting the `default_assistant` field. If you don't specify it, the default assistant is `asst_jCP75X9phRfVjZ8Q4iBistYT`.
+You can specify the default assistant to use by setting the `default_assistant` field. 
 
 Example:
 
@@ -107,13 +110,13 @@ markdown: True
 openai_api_key: <openai_api_key>
 assistants:
   my_assistant:
-    id: assist_askjf2ffhuFJ4hUF2efh24
+    id: asst_abcdabcdabcd
   my_other_assistant:
-    id: assist_123412341234
+    id: asst_123412341234
 ```
 
 ```
-$ gpt my_other_assistant
+$ openai-assistant-cli my_other_assistant
 
 > 
 ```
@@ -133,3 +136,4 @@ pytest tests
 - [ ] Accept an assistant ID as a cli arg
 - [ ] Make file names clickable in citations (that were created by add_citations_to_messages()) 
 - [ ] Cache File retrievals
+- [ ] Consolidate the two log file / persistance implementations
