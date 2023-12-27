@@ -1,5 +1,5 @@
 from gptcli.session import ChatListener
-from gptcli.openai_types import Message
+from gptcli.types import Message
 from pathlib import Path
 
 # TODO use the logging package to do writes instead of our own class

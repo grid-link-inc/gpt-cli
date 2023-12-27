@@ -1,12 +1,3 @@
-from typing import TypedDict
-
-# our representation of a (non-api) message 
-# TODO move out of this file
-# TODO maybe stop using altogether and only use ThreadMessage
-class Message(TypedDict):
-    role: str
-    content: str
-
 class MessageText:
     def __init__(self, value, annotations):
         self.value = value

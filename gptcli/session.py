@@ -1,6 +1,6 @@
 from abc import abstractmethod
 from openai import BadRequestError, OpenAIError
-from gptcli.openai_types import Message
+from gptcli.types import Message
 from typing import Any, Dict, List, Tuple
 from gptcli.assistant import AssistantThread, thread_message_to_text
 

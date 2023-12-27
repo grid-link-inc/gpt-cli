@@ -4,7 +4,8 @@ from attr import dataclass
 from typing import Dict, TypedDict, List
 from openai import OpenAI
 
-from gptcli.openai_types import Message, ThreadMessage, ThreadRun
+from gptcli.types import Message
+from gptcli.openai_types import ThreadMessage, ThreadRun
 
 class AssistantConfig(TypedDict, total=False):
     id: str

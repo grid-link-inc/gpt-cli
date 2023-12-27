@@ -1,5 +1,5 @@
 import logging
-from gptcli.openai_types import Message
+from gptcli.types import Message
 from gptcli.session import ChatListener
 
 

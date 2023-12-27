@@ -124,3 +124,9 @@ $ gpt my_other_assistant
 ```
 pytest tests
 ```
+
+
+# TODO
+
+- [ ] Implement PriceChatListener for Assistants
+- 
