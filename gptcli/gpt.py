@@ -1,5 +1,9 @@
 #!/usr/bin/env python
 
+"""
+This is the main entry point for the gpt-cli program.
+"""
+
 import sys
 
 import gptcli
@@ -10,7 +14,6 @@ if sys.version_info < MIN_PYTHON:
 
 import os
 from typing import cast
-import gptcli.openai_utils as openai_utils
 import argparse
 import sys
 
@@ -112,11 +115,7 @@ def main():
         config = GptCliConfig()
     args = parse_args(config)
 
-    if config.api_key:
-        openai_utils.api_key = config.api_key
-    elif config.openai_api_key:
-        openai_utils.api_key = config.openai_api_key
-    else:
+    if not config.api_key or not config.openai_api_key:
         print(
             "No API key found. Please set the OPENAI_API_KEY environment variable or `api_key: <key>` value in ~/.config/gpt-cli/gpt.yml"
         )
@@ -133,6 +132,7 @@ class CLIChatSession(ChatSession):
             PersistChatListener(assistant.get_thread_id(), assistant.get_assistant_id()),
         ]
 
+        # TODO: Implement price for chatgpt Assistants
         # if show_price:
         #     listeners.append(PriceChatListener(assistant))
 

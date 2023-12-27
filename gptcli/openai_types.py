@@ -1,3 +1,6 @@
+"""
+Since the openai python library doesn't have type annotations, we have to define our own types for the objects we get back from the API.
+"""
 class MessageText:
     def __init__(self, value, annotations):
         self.value = value

@@ -1,3 +1,7 @@
+"""
+This module is responsible for reading the config file.
+"""
+
 import os
 from typing import Dict, List, Optional
 from attr import dataclass
