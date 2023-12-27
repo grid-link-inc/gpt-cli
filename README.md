@@ -1,6 +1,6 @@
-# gpt-cli
+# openai-assistants-cli
 
-Command-line interface for ChatGPT Assistants.
+Command-line interface for ChatGPT Assistants: https://platform.openai.com/docs/assistants/overview.
 
 ![screenshot](https://github.com/grid-link-inc/gpt-cli/assets/466920/ecbcccc4-7cfa-4c04-83c3-a822b6596f01)
 
@@ -20,7 +20,7 @@ Command-line interface for ChatGPT Assistants.
 
 This install assumes a Linux/OSX machine with Python and pip available.
 ```bash
-pip install openai-assistant-cli
+pip install openai-assistants-cli
 ```
 
 Install latest version from source:
@@ -46,7 +46,7 @@ export OPENAI_API_KEY=<your_key_here>
 Run the tool
 
 ```
-openai-assistant-cli
+openai-assistants-cli
 ```
 
 You can also use a `gpt.yml` file for configuration. See the [Configuration](README.md#Configuration) section below.
@@ -58,7 +58,7 @@ Make sure to set the `OPENAI_API_KEY` environment variable to your OpenAI API ke
 Add your assistant to the config file. See `Configuration` below. (TODO Add assistant-id arg and use this in Usage/quickstart)
 
 ```
-usage: openai-assistant-cli [-h] [--no_markdown] 
+usage: openai-assistants-cli [-h] [--no_markdown] 
               [--log_level {DEBUG,INFO,WARNING,ERROR,CRITICAL}]
               [--no_stream]
               [{assistant-name}]
@@ -116,7 +116,7 @@ assistants:
 ```
 
 ```
-$ openai-assistant-cli my_other_assistant
+$ openai-assistants-cli my_other_assistant
 
 > 
 ```
@@ -137,3 +137,19 @@ pytest tests
 - [ ] Make file names clickable in citations (that were created by add_citations_to_messages()) 
 - [ ] Cache File retrievals
 - [ ] Consolidate the two log file / persistance implementations
+
+# Publishing
+
+```
+## Setup
+pip install build
+python -m build
+
+## Test it
+pip install twine
+twine upload --repository testpypi dist/*
+twine upload --repository testpypi dist/* --username __token__ # Use your API token as the password when promtped
+pip install --index-url https://test.pypi.org/simple/ openai-assistants-cli
+
+## Publish
+```

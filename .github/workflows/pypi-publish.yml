@@ -21,7 +21,7 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: pypi-publish
-      url: https://pypi.org/p/gpt-command-line
+      url: https://pypi.org/p/openai-assistants-cli
     permissions:
       id-token: write
 
