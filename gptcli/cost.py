@@ -88,7 +88,7 @@ def price_per_token(model: str, prompt: bool) -> Optional[float]:
     elif model.startswith("claude"):
         return claude_pricing(model, prompt)
     elif model.startswith("chat-bison"):
-        return 0  # TODO
+        return 0
     else:
         return None
 

@@ -126,7 +126,10 @@ pytest tests
 ```
 
 
-# TODO
+# TODO for v1.0
 
 - [ ] Implement PriceChatListener for Assistants
-- 
+- [ ] Add configurable instructions for each assistant to be passed to runs.create()
+- [ ] Accept an assistant ID as a cli arg
+- [ ] Make file names clickable in citations (that were created by add_citations_to_messages()) 
+- [ ] Cache File retrievals

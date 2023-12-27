@@ -11,29 +11,6 @@ class AssistantConfig(TypedDict, total=False):
     id: str
     messages: List[Message]
 
-# Instantiate the ThreadMessage object with the given data
-tmp_thread_message = ThreadMessage(
-    id="msg_feBzkJcQlHRyg4BsLm9GHwwf",
-    assistant_id="asst_jCP75X9phRfVjZ8Q4iBistYT",
-    content=[
-        {
-            "text": {
-                "annotations": [],
-                "value": "Metering in CAISO involves various methods to ensure the accuracy and reliability of meter data used for billing and settlement purposes. This includes main versus backup meter configurations, point-to-point interpolation for missing data, historical data estimation for data replacement, and audit standards for certified metering facilities."
-            },
-            "type": "text"
-        }
-    ],
-    created_at=1703532865,
-    file_ids=[],
-    metadata={},
-    object="thread.message",
-    role="assistant",
-    run_id="run_ZuVSExmplLDv2Z76FJNRXEzw",
-    thread_id="thread_RSkXNj7NpXmAdgUTDc8Fm3XX"
-)
-
-
 CONFIG_DEFAULTS = {
     "id": "asst_jCP75X9phRfVjZ8Q4iBistYT",
 }
@@ -53,8 +30,6 @@ class AssistantThread():
     def __init__(self, config: AssistantConfig):
         self.config = config
         self.openai_client = OpenAI()
-
-        # TODO check for errors. Validate config.id
         self.assistant_handle = self.openai_client.beta.assistants.retrieve(config.get("id"))
         self.last_user_message_id = None
         self.init_messages()
@@ -82,7 +57,6 @@ class AssistantThread():
 
 
     def add_message(self, our_message: Message) -> ThreadMessage:
-        # return tmp_thread_message
         """
         Send a message to the chatgpt Thread associated with this assistant and return the response.
         """
@@ -95,17 +69,14 @@ class AssistantThread():
         return their_message
 
     def run_thread(self) -> ThreadRun:
-        # return
         """
         Start a Run on the chatgpt Thread associated with this assistant and wait for it to complete.
         """
         run = self.openai_client.beta.threads.runs.create(
             thread_id=self.thread.id,
             assistant_id=self.assistant_handle.id,
-            # TODO needed? will this overwrite the one in the assistant? Will the one in the assistant be used if this is not specified?
-            # instructions="You are an advisor that helps people and companies monetize their distributed energy resources. Some examples of distributed energy resources are: batteries like tesla powerwalls, electric vehicles like a nissan leaf, solar panels, smart thermostats, or heat pumps. Your goal is to find programs run by utilities or independent system operators in which the people or customers can enroll their resources and get paid to do so."
         )
-        # TODO move out of this function. use some sort of async primitive instead?
+        # TODO move out of this function. Use async primitive instead.
         while run.status != "completed":
             time.sleep(2)
             run = self.openai_client.beta.threads.runs.retrieve(run.id, thread_id=self.thread.id)
@@ -113,8 +84,6 @@ class AssistantThread():
         return run
 
     def fetch_messages(self, since_last_user_message: bool) -> List[ThreadMessage]:
-        # return [tmp_thread_message]
-
         # TODO keep SyncCursorPage instead of immediately converting to list? 
         # May become a problem when threads become long enough to split into multiple pages
         messages = list(self.openai_client.beta.threads.messages.list(
@@ -151,8 +120,6 @@ class AssistantThread():
                 message_content.value = message_content.value.replace(annotation.text, f' [{index}]')
 
                 # Gather citations based on annotation attributes
-                # TODO cache file retrievals
-                # TOOD implement file download links
                 if (file_citation := getattr(annotation, 'file_citation', None)):
                     cited_file = self.openai_client.files.retrieve(file_citation.file_id)
                     searchable_quote = ' '.join(file_citation.quote.split()[:6])
@@ -194,5 +161,5 @@ def init_assistant(
 def thread_message_to_text(thread_messages: ThreadMessage) -> str:
     thread_messages = [content for thread_message in thread_messages for content in thread_message.content]
     thread_contents = filter(lambda content: content.type == "text", thread_messages)
-    thread_texts = [content.text.value for content in thread_contents]
+    thread_texts = [content.text.value + "\n" for content in thread_contents]
     return thread_texts

@@ -1,12 +1,12 @@
 [project]
-name = "gpt-command-line"
-version = "0.1.4"
-description = "Command-line interface for ChatGPT, Claude and Bard"
-authors = [{name = "Val Kharitonov", email = "val@kharvd.com"}]
+name = "gpt-assistant-command-line"
+version = "0.1.0"
+description = "Command-line interface for ChatGPT Assistants"
+authors = [{name = "Lyon Lay", email = "lay.lyon@gmail.com"}]
 readme = "README.md"
 license = {file = "LICENSE"}
 requires-python = ">=3.9"
-keywords = ["cli", "command-line", "assistant", "openai", "claude", "bard", "gpt-3", "gpt-4", "llm", "chatgpt", "gpt-cli", "google-bard", "anthropic", "gpt-client", "anthropic-claude", "palm2"]
+keywords = ["cli", "command-line", "assistant", "openai", "gpt-3", "gpt-4", "llm", "chatgpt", "gpt-cli", "gpt-client"]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Environment :: Console",
@@ -17,10 +17,8 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
 ]
 dependencies = [
-    "anthropic==0.7.7",
     "attrs==23.1.0",
     "black==23.1.0",
-    "google-generativeai==0.1.0",
     "openai==1.3.8",
     "prompt-toolkit==3.0.41",
     "pytest==7.3.1",
@@ -35,7 +33,7 @@ dependencies = [
 "Homepage" = "https://github.com/kharvd/gpt-cli"
 
 [project.scripts]
-gpt = "gptcli.gpt:main"
+gpt_assistant = "gptcli.gpt:main"
 
 [build-system]
 requires = ["pip>=23.0.0", "setuptools>=58.0.0", "wheel"]

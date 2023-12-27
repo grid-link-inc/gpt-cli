@@ -78,7 +78,7 @@ class ChatSession:
     ):
         self.assistant = assistant
         self.messages: List[Message] = assistant.init_messages()
-        self.user_prompts: List[Tuple[Message, None]] = []
+        self.user_prompts: List[Message] = []
         self.listener = listener
 
     def _clear(self):
@@ -107,7 +107,6 @@ class ChatSession:
             # Fetch the text of all recent messages
             thread_messages = self.assistant.fetch_messages(since_last_user_message=True)
             thread_texts = thread_message_to_text(thread_messages)
-            # TODO add newlines between messages
 
             with self.listener.response_streamer() as stream:
                 for response in thread_texts:
@@ -135,7 +134,7 @@ class ChatSession:
         self.assistant.add_message(user_message)
         self.messages = self.messages + [user_message]
         self.listener.on_chat_message(user_message)
-        self.user_prompts.append((user_message, None)) # TODO un-tuple this
+        self.user_prompts.append(user_message)
         return user_message
 
     def _rollback_user_message(self):
