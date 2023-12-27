@@ -10,29 +10,6 @@ class AssistantConfig(TypedDict, total=False):
     id: str
     messages: List[Message]
 
-class Text:
-    def __init__(self, annotations, value):
-        self.annotations = annotations
-        self.value = value
-
-class MessageContentText:
-    def __init__(self, text, type):
-        self.text = text
-        self.type = type
-
-class ThreadMessage:
-    def __init__(self, id, assistant_id, content, created_at, file_ids, metadata, object, role, run_id, thread_id):
-        self.id = id
-        self.assistant_id = assistant_id
-        self.content = [MessageContentText(Text(c['text']['annotations'], c['text']['value']), c['type']) for c in content]
-        self.created_at = created_at
-        self.file_ids = file_ids
-        self.metadata = metadata
-        self.object = object
-        self.role = role
-        self.run_id = run_id
-        self.thread_id = thread_id
-
 # Instantiate the ThreadMessage object with the given data
 tmp_thread_message = ThreadMessage(
     id="msg_feBzkJcQlHRyg4BsLm9GHwwf",
@@ -78,9 +55,8 @@ class AssistantThread():
 
         # TODO check for errors. Validate config.id
         self.assistant_handle = self.openai_client.beta.assistants.retrieve(config.get("id"))
-        self.thread = self.openai_client.beta.threads.create()
-        # self.messages_cache = self.init_messages()
         self.last_user_message_id = None
+        self.init_messages()
 
     @classmethod
     def from_config(cls, name: str, config: AssistantConfig):
@@ -96,6 +72,11 @@ class AssistantThread():
         return cls(config)
 
     def init_messages(self) -> List[Message]:
+        """
+        Create a new OpenAI thread and return the default messages.
+        """
+        self.thread = self.openai_client.beta.threads.create()  
+
         return self.config.get("messages", [])[:]
 
 
